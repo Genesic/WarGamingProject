@@ -56,18 +56,5 @@ sub dolog {
     print "$stamp $prefix:$line\n";
 }
 
-sub handleRead{
-    my($handle, $player) = @_;
-
-    $handle->push_read(line => qr/\r?\n|\0/, sub {
-            processCmd(@_);
-            $handle->push_read(line => qr/\r?\n|\0/, callee);
-        });
-}
-
-sub processCmd{
-    print "input:".Dumper(\@_);
-}
-
 main();
 1;
