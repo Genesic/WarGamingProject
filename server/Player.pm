@@ -1,5 +1,6 @@
 package Player;
 
+use AE; use callee;
 use POSIX qw(strftime);
 use Data::Dumper;
 use JSON;
@@ -9,6 +10,7 @@ our %cmd;
 our %playerList;
 
 use constant {
+    NOLOG => 1,
     PLAYER1 => 1,
     PLAYER2 => 2,
 
@@ -46,13 +48,41 @@ sub new {
     bless $self, $class;
 
     $self->addUser;
+    $self->write("login");
     $hd->push_read(line => qr/\r?\n|\0/, sub {
             my ($handle, $line) = @_;
             $self->processCmd($line);
             $hd->push_read(line => qr/\r?\n|\0/, callee);
         });
-
+    $self->ping;
     return $self;
+}
+
+sub ping {
+    my ($player) = @_;
+
+    $player->write("ping", NOLOG);
+    $player->{pingTimer} = AE::timer 10, 0, sub{
+        $player->destroy;
+    };
+}
+
+sub pong {
+    my ($player) = @_;
+    delete $player->{pingTimer};
+    $player->{pongTimer} = AE::timer 10, 0, sub{
+        undef $player->{pongTimer};
+        $player->ping;
+    };
+}
+
+sub destroy {
+    my ($player) = @_;
+    $player->dolog("", "Destroyed");
+    delete $playerList{$player->{rid}};
+    for (keys %$player ){
+        delete $player->{$_};
+    }
 }
 
 sub load_cmd {
@@ -80,11 +110,15 @@ sub dolog {
 
 sub processCmd{
     my ($player, $line) = @_;
-    $player->dolog("In", $line);
     my ($cmd, $json) = split / /,$line, 2;
-    my $args = decode_json($json);
-    load_cmd();
-    $cmd{$cmd}->($player, $cmd, $args);
+    if( $cmd eq 'pong' ){
+        $player->pong;
+    } else {
+        $player->dolog("In", $line);
+        my $args = ($json)? decode_json($json) : [];
+        load_cmd();
+        $cmd{$cmd}->($player, $cmd, $args);
+    }
 }
 
 sub match {
@@ -92,6 +126,7 @@ sub match {
 
     for my $rid (keys %playerList){
         my $obj = $playerList{$rid};
+        next if( $rid == $player->{rid} );
         next if( !$obj->{startMatch} );
         next if( $obj->{rival} );
         $rival = $obj;
@@ -111,11 +146,11 @@ sub setStartData {
     delete $player->{startMatch}; 
 
     $player->{rival} = $rival->{rid};
-    my %data = {
+    my %data = (
         pos => $pos,
         hp => 100,
         combo => 0,
-    };
+    );
     $player->{game} = \%data;
 }
 
@@ -125,6 +160,7 @@ sub getStartData {
     my $rival = getUser($player->{rival});
     my $rivalGame = $rival->{game};
     my %output = (
+        res => 1,
         pos => $playerGame->{pos},
         hp => $playerGame->{hp},
         rival_hp => $rivalGame->{hp},
@@ -136,7 +172,7 @@ sub getStartData {
 sub checkReady {
     my ($player) = @_;
     $player->{checkReady} = 1;
-    my $rival = getPlayer($player->{rival});
+    my $rival = getUser($player->{rival});
     return (1, $rival) if( $rival && $rival->{checkReady} );
     return (0);
 }
@@ -162,7 +198,7 @@ sub getSkillByCombo {
 sub checkTouch {
     my ($player, $touch) = @_;
     if( $touch == TOUCH_SUCCESS ){
-        my $combo = $player->addCombo();
+        my $combo = $player->addCombo(1);
         return (1, 0, $combo);
     } elsif( $touch == TOUCH_FAIL ){
         my $combo = $player->clearCombo();
@@ -183,8 +219,8 @@ sub sendSync {
     my ($player) = @_;
     my $rival = getUser($player->{rival});
     my $data = [$player->{game}{pos}, $player->{game}{hp}];
-    $player->write("combo ".encode_json($data));
-    $rival->write("combo ".encode_json($data));
+    $player->write("sync ".encode_json($data));
+    $rival->write("sync ".encode_json($data));
 }
 
 sub patchHp {

@@ -40,17 +40,7 @@ sub start_connect{
 
         my $client = new Client($handle);
         $client->write("login [1]");
-        $client->write("select_role [1]");
     };
-}
-
-sub handleRead{
-    my($handle, $player) = @_;
-
-    $handle->push_read(line => qr/\r?\n|\0/, sub {
-            processCmd(@_);
-            $handle->push_read(line => qr/\r?\n|\0/, callee);
-        });
 }
 
 main();
@@ -59,6 +49,7 @@ main();
 package Client;
 use AE; use callee;
 use POSIX qw(strftime);
+use JSON qw(encode_json decode_json);
 
 sub new {
     my ($class, $hd) = @_;
@@ -90,8 +81,30 @@ sub write{
 
 sub processCmd{
     my ($client, $hd, $line) = @_;
-    my ($cmd, $args) = split / /, $line, 2;
-    print "cmd:$cmd args:$args\n";
+    $client->dolog("In",$line);
+    my ($cmd, $json) = split / /, $line, 2;
+    my $args = ($json)? decode_json($json) : [];
+
+    if( $cmd eq 'ping' ){
+        $client->write("pong");
+    } if( $cmd eq 'login' ){
+        $client->write("select_role [1]");
+    } elsif( $cmd eq 'select_role' ){
+        $client->write("match");
+    } elsif( $cmd eq 'match' ){
+        $client->write("ready") if( $args->{res} );
+    } elsif( $cmd eq 'start_game' ){
+        for (1..10){
+            $client->write("tempo [1]");
+            sleep(1);
+        }
+        $client->write("tempo [0]");
+    } elsif( $cmd eq 'beSkilled' ){
+        for my $hp (1..14){
+            $client->write("def_res [-$hp]");
+            sleep (1);
+        }
+    }
 }
 
 1;

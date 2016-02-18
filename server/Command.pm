@@ -17,13 +17,14 @@ use Data::dumper;
         my ($res, $rival) = $player->match();
         if( $res ){
             $player->setStartData($rival, Player::PLAYER1);
-            my $data1 = $player->getStartData();
-            $player->write("$cmd ".encode_json([1, $data1])); # 設定player是位置1
             $rival->setStartData($player, Player::PLAYER2);
+            my $data1 = $player->getStartData();
             my $data2 = $rival->getStartData();
-            $rival->write("$cmd ".encode_json([1, $data2])); # 設定rival是位置2
+            $player->write("$cmd ".encode_json($data1)); # 設定player是位置1
+            $rival->write("$cmd ".encode_json($data2)); # 設定rival是位置2
         } else {
-            $player->write("$cmd ".encode_json([0, "wait"]));
+            my $data = { res => 0, reason => "wait" };
+            $player->write("$cmd ".encode_json($data));
         }
     },
 
@@ -55,9 +56,11 @@ use Data::dumper;
         my ($player, $cmd, $args) = @_;
         my $patch = $args->[0];
         my $hp = $player->patchHp($patch);
+        $player->sendSync;
         if( $hp < 0 ){
             $player->write("end_game ".encode_json([Player::LOSE]));
-            $player->write("end_game ".encode_json([Player::WIN]));
+            my $rival = Player::getUser($player->{rival});
+            $rival->write("end_game ".encode_json([Player::WIN]));
         }
     },
 )
