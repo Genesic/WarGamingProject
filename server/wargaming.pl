@@ -17,8 +17,15 @@ use Player;
 my $cv = AE::cv;
 sub main {
     my(%opt, @port) = ();
-    getopts("p:",\%opt);
-    start_server($opt{p});
+    getopts("Ep:",\%opt);
+    if( $opt{E} ){
+        my $file = 'Command.pm';
+        do $file;
+        print "do $file :". ($@ || 'ok').$/;
+        exit 0;
+    } else {
+        start_server($opt{p});
+    }
     $cv->recv();
 }
 

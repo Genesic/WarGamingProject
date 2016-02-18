@@ -89,7 +89,7 @@ sub write{
 }
 
 sub processCmd{
-    my ($client, $line) = @_;
+    my ($client, $hd, $line) = @_;
     my ($cmd, $args) = split / /, $line, 2;
     print "cmd:$cmd args:$args\n";
 }
