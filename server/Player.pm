@@ -1,12 +1,13 @@
 package Player;
 
+use strict;
 use AE; use callee;
 use POSIX qw(strftime);
 use Data::Dumper;
 use JSON;
 
 my $player_seq = 0;
-our %cmd;
+our %command;
 our %playerList;
 
 use constant {
@@ -36,6 +37,13 @@ sub addUser {
 sub getUser {
     my ($rid) = @_;
     return $playerList{$rid};
+}
+
+sub getRival {
+    my ($player) = @_;
+    return undef if( !$player->{rival} );
+    my $rival = getUser($player->{rival});
+    return $rival;
 }
 
 sub new {
@@ -89,7 +97,7 @@ sub load_cmd {
     my ($player) = @_;
     my %tmp = do 'Command.pm';
     if( %tmp ){
-        %cmd = %tmp;
+        %command = %tmp;
     } else {
         $player->dolog($player, "DEBUG", "load_cmd fail");
     }
@@ -117,13 +125,18 @@ sub processCmd{
         $player->dolog("In", $line);
         my $args = ($json)? decode_json($json) : [];
         load_cmd();
-        $cmd{$cmd}->($player, $cmd, $args);
+        if( defined $command{$cmd} ){
+            $command{$cmd}->($player, $cmd, $args);
+        } else {
+            $player->dolog("Undef", $line);
+        }
     }
 }
 
 sub match {
     my ($player) = @_;
 
+    my $rival;
     for my $rid (keys %playerList){
         my $obj = $playerList{$rid};
         next if( $rid == $player->{rid} );
@@ -157,11 +170,15 @@ sub setStartData {
 sub getStartData {
     my ($player) = @_;
     my $playerGame = $player->{game};
-    my $rival = getUser($player->{rival});
+    my $rival = $player->getRival;
+    return {} if( !$rival );
+
     my $rivalGame = $rival->{game};
     my %output = (
         res => 1,
         pos => $playerGame->{pos},
+        role => $player->{role},
+        rival_role => $rival->{role},
         hp => $playerGame->{hp},
         rival_hp => $rivalGame->{hp},
     );
@@ -172,7 +189,7 @@ sub getStartData {
 sub checkReady {
     my ($player) = @_;
     $player->{checkReady} = 1;
-    my $rival = getUser($player->{rival});
+    my $rival = $player->getRival;
     return (1, $rival) if( $rival && $rival->{checkReady} );
     return (0);
 }
@@ -209,24 +226,33 @@ sub checkTouch {
 
 sub sendCombo {
     my ($player) = @_;
-    my $rival = getUser($player->{rival});
-    my $data = [$player->{game}{pos}, $player->{game}{combo}];
+    my $rival = $player->getRival;
+    return if( !$rival );
+    my $data = {  "self" => $player->{game}{combo} };
+    my $rivalData = { "rival" => $player->{game}{combo} };
     $player->write("combo ".encode_json($data));
-    $rival->write("combo ".encode_json($data));
+    $rival->write("combo ".encode_json($rivalData));
 }
 
 sub sendSync {
     my ($player) = @_;
-    my $rival = getUser($player->{rival});
-    my $data = [$player->{game}{pos}, $player->{game}{hp}];
+    my $rival = $player->getRival;
+    return if( !$rival );
+    my $data = { "self" => $player->{game}{hp} };
+    my $rivalData = { "rival" => $player->{game}{hp} };
     $player->write("sync ".encode_json($data));
-    $rival->write("sync ".encode_json($data));
+    $rival->write("sync ".encode_json($rivalData));
 }
 
 sub patchHp {
     my ($player, $patch) = @_;
     $player->{game}{hp} += $patch;
     return $player->{game}{hp}; 
+}
+
+sub gameOver {
+    my ($player) = @_;
+    delete $player->{rival};
 }
 
 1;

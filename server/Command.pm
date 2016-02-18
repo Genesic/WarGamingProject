@@ -41,12 +41,14 @@ use Data::dumper;
     # 每一拍傳送過來的結果
     tempo => sub {
         my ($player, $cmd, $args) = @_;
+        my $rival = $player->getRival;
+        return if( !$rival );
+
         my $tempo = $args->[0];
         my ($res, $skill, $combo) = $player->checkTouch($tempo);
         $player->sendCombo;
         # 如果combo中斷的話根據combo數施放skill
         if( $skill ){
-            my $rival = Player::getUser($player->{rival});
             $rival->write("beSkilled ".encode_json([$skill]));
         }
     },
@@ -54,13 +56,17 @@ use Data::dumper;
     # 防禦結果
     def_res => sub {
         my ($player, $cmd, $args) = @_;
+        my $rival = $player->getRival;
+        return if( !$rival );
+
         my $patch = $args->[0];
         my $hp = $player->patchHp($patch);
         $player->sendSync;
         if( $hp < 0 ){
             $player->write("end_game ".encode_json([Player::LOSE]));
-            my $rival = Player::getUser($player->{rival});
             $rival->write("end_game ".encode_json([Player::WIN]));
+            $player->gameOver;
+            $rival->gameOver;
         }
     },
 )
