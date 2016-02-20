@@ -23,19 +23,18 @@ public class BorderAtkClick : MonoBehaviour, IPointerUpHandler, IPointerDownHand
         if (start)
         {
             start = false;
-            if (border.color.a == 1)
+            
+            if (border.color.a > 0.4)
                 clickRes = ClickRes.Perfect;
-            else if (border.color.a > 0.4)
-                clickRes = ClickRes.Great;
             else
                 clickRes = ClickRes.Miss;
-
-            Vector2 position = getPoint(eventData);
+                        
+            //Vector2 position = getPoint(eventData);
             JSONNode json = new JSONArray();
-            json[0] = ((int)clickRes).ToString();
-            json[1] = position.x.ToString();
-            json[2] = position.y.ToString();
-            MainManager.socket.SendData("atk " + json.ToString());
+            json[0] = (border.color.a > 0.4)? "1" : "0";
+            
+            // json[0] = ((int)clickRes).ToString();
+            MainManager.socket.SendData("tempo " + json.ToString());
             StartCoroutine(showResText());
         }
     }

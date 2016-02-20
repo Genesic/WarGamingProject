@@ -12,7 +12,7 @@ public class MainManager : MonoBehaviour {
     public static int bpm150 = Animator.StringToHash("bpm150");
     public static int bpm180 = Animator.StringToHash("bpm180");
     public static float bpm = 60;
-    public static float beat = (60 / bpm);
+    public static float beat = (60 / bpm) * 2;
     public static bool endGame = false;
     public Text ipHost;
     public static void updateEndGame(bool flag)

@@ -24,6 +24,7 @@ use constant {
 
 # SKILL
 use constant {
+    NONE => 0,
     HIT_9 => 1,
     HIT_18 => 2,
     HIT_27 => 3,
@@ -209,10 +210,11 @@ sub clearCombo {
 
 sub getSkillByCombo {
     my ($combo) = @_;
-    return HIT_9;
+    return HIT_9 if( $combo > 5 );
+    return NONE;
 }
 
-sub checkTouch {
+sub checkTempo {
     my ($player, $touch) = @_;
     if( $touch == TOUCH_SUCCESS ){
         my $combo = $player->addCombo(1);
@@ -228,8 +230,8 @@ sub sendCombo {
     my ($player) = @_;
     my $rival = $player->getRival;
     return if( !$rival );
-    my $data = {  "self" => $player->{game}{combo} };
-    my $rivalData = { "rival" => $player->{game}{combo} };
+    my $data = {  "combo" => $player->{game}{combo} };
+    my $rivalData = { "rival_combo" => $player->{game}{combo} };
     $player->write("combo ".encode_json($data));
     $rival->write("combo ".encode_json($rivalData));
 }
@@ -238,8 +240,8 @@ sub sendSync {
     my ($player) = @_;
     my $rival = $player->getRival;
     return if( !$rival );
-    my $data = { "self" => $player->{game}{hp} };
-    my $rivalData = { "rival" => $player->{game}{hp} };
+    my $data = { "hp" => $player->{game}{hp} };
+    my $rivalData = { "rival_hp" => $player->{game}{hp} };
     $player->write("sync ".encode_json($data));
     $rival->write("sync ".encode_json($rivalData));
 }

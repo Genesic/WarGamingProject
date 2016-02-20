@@ -5,12 +5,14 @@ using UnityEngine.EventSystems;
 public class BorderDefClick :  MonoBehaviour, IPointerUpHandler, IPointerDownHandler, IPointerClickHandler {
     public ClickRes clickRes = ClickRes.Miss;
     public Text resText;
-    public void init(float x, float y)
+    
+    //public void init(float x, float y)
+    public void init()
     {
         // 移動到防禦位置
-        RectTransform rt = gameObject.GetComponent<RectTransform>();
-        Debug.Log("x:"+x+" y:"+y);       
-        rt.anchoredPosition = new Vector2(x, y);
+        //RectTransform rt = gameObject.GetComponent<RectTransform>();
+        //Debug.Log("x:"+x+" y:"+y);       
+        //rt.anchoredPosition = new Vector2(x, y);
         
         // 初始化點擊結果
         clickRes = ClickRes.Miss;
@@ -21,6 +23,7 @@ public class BorderDefClick :  MonoBehaviour, IPointerUpHandler, IPointerDownHan
     {
         clickRes = ClickRes.Perfect;
         MainManager.socket.SendData("def_res [1]");
+        // Debug.Log("perfect");
         StartCoroutine(showResText());
     }
     

@@ -45,11 +45,11 @@ use Data::dumper;
         return if( !$rival );
 
         my $tempo = $args->[0];
-        my ($res, $skill, $combo) = $player->checkTouch($tempo);
+        my ($res, $skill, $combo) = $player->checkTempo($tempo);
         $player->sendCombo;
         # 如果combo中斷的話根據combo數施放skill
         if( $skill ){
-            $rival->write("beSkilled ".encode_json([$skill]));
+            $rival->write("be_skilled ".encode_json([$skill]));
         }
     },
 
@@ -59,7 +59,7 @@ use Data::dumper;
         my $rival = $player->getRival;
         return if( !$rival );
 
-        my $patch = $args->[0];
+        my $patch = ($args->[0])? 0 : -5;
         my $hp = $player->patchHp($patch);
         $player->sendSync;
         if( $hp < 0 ){

@@ -13,7 +13,6 @@ public enum ActSide
 public class GamePlayUI : MonoBehaviour
 {
     public Text roundTimes;
-    public Text combo;
     public Text side;
     public Text chName;
     public Text rivalName;
@@ -23,9 +22,10 @@ public class GamePlayUI : MonoBehaviour
     public RectTransform rivalHpBar;
     public Animator atkTempo;
     public PreTempo preTempo;
-    public PreTempo preClick;
     public GameObject touchPanel;
     public AudioClip correctSE;
+    public Text combo;
+    public Text rivalCombo;
     public int hpMax;
     public int rivalHpMax;
     public int hp;
@@ -39,14 +39,12 @@ public class GamePlayUI : MonoBehaviour
 
     public void updateCombo(int times)
     {
-        if (times >= 1)
-        {
-            combo.text = times + " combo";
-        }
-        else
-        {
-            combo.text = string.Empty;
-        }
+        combo.text = (times >= 1)? times + " combo" : string.Empty;
+    }
+    
+    public void updateRivalCombo(int times)
+    {
+        rivalCombo.text = (times >= 1)? times + " combo" : string.Empty;
     }
 
     public void updateSide(ActSide act)

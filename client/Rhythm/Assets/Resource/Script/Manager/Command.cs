@@ -10,12 +10,14 @@ public class Command : MonoBehaviour
     public StartSelect startSelect;
     public GamePlayUI gamePlayUI;
     public TempoPlay tempoPlay;
+    public Skill skill;
 
     public List<string> socketQueue;
 
     public void init()
     {
         gameFlow = gameObject.GetComponent<GameFlow>();
+        skill = gameObject.GetComponent<Skill>();
     }
 
     void FixedUpdate()
@@ -57,16 +59,26 @@ public class Command : MonoBehaviour
             var args = JSON.Parse(jsons);
             socket_start_game(args);
         }
-        else if (cmd == "def")
-        { // v2.0
+        //        else if (cmd == "def")
+        //        { // v2.0
+        //            var args = JSON.Parse(jsons);
+        //            socket_def(args);
+        //        }
+        else if (cmd == "be_skilled")
+        {
             var args = JSON.Parse(jsons);
-            socket_def(args);
+            socket_be_skilled(args);
         }
         else if (cmd == "sync")
         {
             var args = JSON.Parse(jsons);
             socket_sync(args);
         }
+        else if (cmd == "combo")
+        {
+            var args = JSON.Parse(jsons);
+            socket_combo(args);
+        }        
         else if (cmd == "end_game")
         {
             socket_end_game();
@@ -109,22 +121,27 @@ public class Command : MonoBehaviour
         if (res == 1)
         {
             int hp = int.Parse(data["hp"]);
-            int rivalHp = int.Parse(data["rival_hp"]);  
+            int rivalHp = int.Parse(data["rival_hp"]);
             int role = int.Parse(data["role"]);
             int rivalRole = int.Parse(data["rival_role"]);
             // 初始化
             gamePlayUI.updateCombo(0);
             startSelect.match.SetActive(false);
             gamePlayUI.gameObject.SetActive(true);
-            
+
             // 我方初始化
             gamePlayUI.hpMax = hp;
             gamePlayUI.updateChName(role);
+
             // 敵方初始化
             gamePlayUI.rivalHpMax = rivalHp;
             gamePlayUI.updateRivalName(rivalRole);
-            
+
             MainManager.socket.SendData("ready");
+        }
+        else
+        {
+            Debug.Log("not match res:" + res);
         }
     }
 
@@ -133,6 +150,12 @@ public class Command : MonoBehaviour
         tempoPlay.init();
         tempoPlay.startTempo();
         MainManager.socket.SendData("round_set");
+    }
+
+    public void socket_be_skilled(JSONNode data)
+    {
+        int id = int.Parse(data[0]);
+        skill.startSkill(id);
     }
 
     public void socket_def(JSONNode data)
@@ -145,10 +168,30 @@ public class Command : MonoBehaviour
 
     public void socket_sync(JSONNode data)
     {
-        int hp = int.Parse(data["hp"]);
-        int rival_hp = int.Parse(data["rival_hp"]);
-        gamePlayUI.updateHp(hp);
-        gamePlayUI.updateRivalHp(rival_hp);
+        if (!string.IsNullOrEmpty(data["hp"]))
+        {
+            int hp = data["hp"].AsInt;
+            gamePlayUI.updateHp(hp);
+        }
+        if (!string.IsNullOrEmpty(data["rival_hp"]))
+        {
+            int rival_hp = data["rival_hp"].AsInt;
+            gamePlayUI.updateRivalHp(rival_hp);
+        }
+    }
+    
+    public void socket_combo(JSONNode data)
+    {
+        if(!string.IsNullOrEmpty(data["combo"]))
+        {
+            int combo = data["combo"].AsInt;
+            gamePlayUI.updateCombo(combo);
+        }
+        
+        if(!string.IsNullOrEmpty(data["rival_combo"])){
+            int rivalCombo = data["rival_combo"].AsInt;
+            gamePlayUI.updateRivalCombo(rivalCombo);
+        }
     }
 
     public void socket_end_game()

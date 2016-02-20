@@ -18,7 +18,7 @@ public enum ClickRes
 public class TempoPlay : MonoBehaviour
 {
     public BorderAtkClick borderAtkClick;
-    public BorderDefClick borderDefclick;
+    // public BorderDefClick borderDefclick;
     public List<DefData> defQueue = new List<DefData>(); 
     private Animator flashBorder;
     private AudioSource source;
@@ -49,7 +49,23 @@ public class TempoPlay : MonoBehaviour
         defData.y = y;        
         defQueue.Add(defData);        
     }
+    IEnumerator playTempo()
+    {
+        Debug.Log("start tempo");
+        while (!MainManager.endGame)
+        {
+            // 初始化
+            borderAtkClick.init();
 
+            // 播動畫
+            flashBorder.SetTrigger(MainManager.bpm60);                    
+            yield return new WaitForSeconds(MainManager.beat);
+            
+            if( borderAtkClick.clickRes == ClickRes.None)
+                MainManager.socket.SendData("tempo [0]");                                                                                       
+        }
+    }
+    /*
     IEnumerator playTempo()
     {
         while (!MainManager.endGame)
@@ -60,7 +76,7 @@ public class TempoPlay : MonoBehaviour
             // Debug.Log("queue count:"+defQueue.Count);  
             if( defQueue.Count > 0 ){
                 DefData defData = defQueue[0];
-                borderDefclick.init(defData.x, defData.y);
+                // borderDefclick.init(defData.x, defData.y);
                 borderDefclick.gameObject.SetActive(false);
                 defStart = true;
             }   
@@ -85,4 +101,5 @@ public class TempoPlay : MonoBehaviour
             }                                                                                  
         }
     }
+    */
 }
