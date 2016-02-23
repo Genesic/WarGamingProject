@@ -25,9 +25,9 @@ use constant {
 # SKILL
 use constant {
     NONE => 0,
-    HIT_9 => 1,
-    HIT_18 => 2,
-    HIT_27 => 3,
+    SKILL_1 => 1,
+    SKILL_2 => 2,
+    SKILL_3 => 3,
 };
 
 sub addUser {
@@ -164,7 +164,9 @@ sub setStartData {
     my %data = (
         pos => $pos,
         hp => 100,
+        mp => 0,
         combo => 0,
+        skill_queue => [],
     );
     $player->{game} = \%data;
 }
@@ -209,22 +211,54 @@ sub clearCombo {
     return $combo;
 }
 
-sub getSkillByCombo {
-    my ($combo) = @_;
-    return HIT_18 if( $combo > 10 );
-    return HIT_9 if( $combo > 5 );
-    return NONE;
+sub getSkillCost {
+    my %output = (
+        (SKILL_1) => 20,
+        (SKILL_2) => 30,
+        (SKILL_3) => 35,
+    )
+
+    return \%output;
+}
+
+sub useSkill {
+    my ($player, $skill) = @_;
+    my $patch = getSkillCost()->{$skill};
+    if( $player->{game}{mp} >= $patch ){
+        $player->patchMp(-$patch);
+        $player->pushSkillQueue($skill);
+        return (1, $skill);
+    } else {
+        return (0, 0);
+    }
 }
 
 sub checkTempo {
     my ($player, $touch) = @_;
     if( $touch == TOUCH_SUCCESS ){
         my $combo = $player->addCombo(1);
-        return (1, 0, $combo);
-    } elsif( $touch == TOUCH_FAIL ){
-        my $combo = $player->clearCombo();
-        my $skill = getSkillByCombo($combo);
-        return (0, $skill, 0);
+        $player->updateMpByCombo($combo);
+    }
+}
+
+sub pushSkillQueue {
+    my ($player, $skill) = @_;
+    push @{$player->{game}{skill_queue}}, $skill;
+}
+
+sub updateMpByCombo {
+    my ($player, $combo) = @_;
+
+    if( $combo < 20 ){
+        $player->patchMp(1);
+    } elsif( $combo < 40 ){
+        $player->patchMp(2);
+    } elsif( $combo < 60 ){
+        $player->patchMp(3);
+    } elsif( $combo < 80 ){
+        $player->patchMp(4);
+    } else {
+        $player->patchMp(5);
     }
 }
 
@@ -242,6 +276,12 @@ sub patchHp {
     my ($player, $patch) = @_;
     $player->{game}{hp} += $patch;
     return $player->{game}{hp}; 
+}
+
+sub patchMp {
+    my ($player, $patch) = @_;
+    $player->{game}{mp} += $patch;
+    return $player->{game}{mp}; 
 }
 
 sub gameOver {

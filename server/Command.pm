@@ -45,14 +45,22 @@ use Data::dumper;
         return if( !$rival );
 
         my $tempo = $args->[0];
-        my ($res, $skill, $combo) = $player->checkTempo($tempo);
+        $player->checkTempo($tempo);
         $player->sendSync("combo");
-        # 如果combo中斷的話根據combo數施放skill
-        if( $skill ){
-            $player->write("skill ".encode_json([$skill]));
-            $rival->write("be_skill ".encode_json([$skill]));
-        }
     },
+
+    # 使用技能(會先放到對方client的be_skill_queue中，可以被執行時會再丟be_skill過來通知server傳送給兩邊執行)
+    skill => sub {
+        my ($player, $cmd, $args) = @_;
+        my ($res, $skill) = $player->useSkill($args->[0]);
+        if( $res ){
+            $player
+        }
+    }
+
+    # 被使用技能開始執行
+    be_skill => sub{
+    }
 
     # 防禦結果
     def_res => sub {
