@@ -234,8 +234,8 @@ sub sendCombo {
     return if( !$rival );
     my $data = {  "combo" => $player->{game}{combo} };
     my $rivalData = { "rival_combo" => $player->{game}{combo} };
-    $player->write("combo ".encode_json($data));
-    $rival->write("combo ".encode_json($rivalData));
+    $player->write("sync ".encode_json($data));
+    $rival->write("sync ".encode_json($rivalData));
 }
 
 sub sendSync {

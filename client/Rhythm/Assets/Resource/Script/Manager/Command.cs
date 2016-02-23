@@ -78,12 +78,7 @@ public class Command : MonoBehaviour
         {
             var args = JSON.Parse(jsons);
             socket_sync(args);
-        }
-        else if (cmd == "combo")
-        {
-            var args = JSON.Parse(jsons);
-            socket_combo(args);
-        }        
+        }    
         else if (cmd == "end_game")
         {
             socket_end_game();
@@ -190,10 +185,7 @@ public class Command : MonoBehaviour
             int rival_hp = data["rival_hp"].AsInt;
             gamePlayUI.updateRivalHp(rival_hp);
         }
-    }
-    
-    public void socket_combo(JSONNode data)
-    {
+        
         if(!string.IsNullOrEmpty(data["combo"]))
         {
             int combo = data["combo"].AsInt;
@@ -203,9 +195,9 @@ public class Command : MonoBehaviour
         if(!string.IsNullOrEmpty(data["rival_combo"])){
             int rivalCombo = data["rival_combo"].AsInt;
             gamePlayUI.updateRivalCombo(rivalCombo);
-        }
+        }        
     }
-
+    
     public void socket_end_game()
     {
         MainManager.updateEndGame(true);
