@@ -228,22 +228,12 @@ sub checkTempo {
     }
 }
 
-sub sendCombo {
-    my ($player) = @_;
-    my $rival = $player->getRival;
-    return if( !$rival );
-    my $data = {  "combo" => $player->{game}{combo} };
-    my $rivalData = { "rival_combo" => $player->{game}{combo} };
-    $player->write("sync ".encode_json($data));
-    $rival->write("sync ".encode_json($rivalData));
-}
-
 sub sendSync {
-    my ($player) = @_;
+    my ($player, $key) = @_;
     my $rival = $player->getRival;
     return if( !$rival );
-    my $data = { "hp" => $player->{game}{hp} };
-    my $rivalData = { "rival_hp" => $player->{game}{hp} };
+    my $data = { $key => $player->{game}{$key} };
+    my $rivalData = { "rival_".$key => $player->{game}{$key} };
     $player->write("sync ".encode_json($data));
     $rival->write("sync ".encode_json($rivalData));
 }

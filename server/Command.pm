@@ -46,7 +46,7 @@ use Data::dumper;
 
         my $tempo = $args->[0];
         my ($res, $skill, $combo) = $player->checkTempo($tempo);
-        $player->sendCombo;
+        $player->sendSync("combo");
         # 如果combo中斷的話根據combo數施放skill
         if( $skill ){
             $player->write("skill ".encode_json([$skill]));
@@ -62,7 +62,7 @@ use Data::dumper;
 
         my $patch = ($args->[0])? 0 : -5;
         my $hp = $player->patchHp($patch);
-        $player->sendSync;
+        $player->sendSync("hp");
         if( $hp < 0 ){
             $player->write("end_game ".encode_json([Player::LOSE]));
             $rival->write("end_game ".encode_json([Player::WIN]));
