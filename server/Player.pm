@@ -185,6 +185,8 @@ sub getStartData {
         rival_role => $rival->{role},
         hp => $playerGame->{hp},
         rival_hp => $rivalGame->{hp},
+        mp_max => 100,
+        rival_mp_max => 100,
     );
 
     return \%output;
@@ -244,6 +246,18 @@ sub checkTempo {
 sub pushSkillQueue {
     my ($player, $skill) = @_;
     push @{$player->{game}{skill_queue}}, $skill;
+}
+
+sub getBeSkill{
+    my ($player) = @_;
+    my $rival = $player->getRival;
+    return if( !$rival );
+
+    my $skill = shift @{$rival->{game}{skill_queue}};
+    if( $skill ){
+        return (1, $skill, $rival);
+    }
+    return (0);
 }
 
 sub updateMpByCombo {

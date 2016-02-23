@@ -59,11 +59,6 @@ public class Command : MonoBehaviour
             var args = JSON.Parse(jsons);
             socket_start_game(args);
         }
-        //        else if (cmd == "def")
-        //        { // v2.0
-        //            var args = JSON.Parse(jsons);
-        //            socket_def(args);
-        //        }
         else if (cmd == "skill")
         {
             var args = JSON.Parse(jsons);
@@ -124,6 +119,9 @@ public class Command : MonoBehaviour
             int rivalHp = int.Parse(data["rival_hp"]);
             int role = int.Parse(data["role"]);
             int rivalRole = int.Parse(data["rival_role"]);
+            int maxMp = data["mp_max"].AsInt;
+            int rivalMaxMp = data["rival_mp_max"].AsInt;
+            
             // 初始化
             gamePlayUI.updateCombo(0);
             gamePlayUI.updateRivalCombo(0);
@@ -132,11 +130,15 @@ public class Command : MonoBehaviour
 
             // 我方初始化
             gamePlayUI.hpMax = hp;
+            gamePlayUI.mpMax = maxMp;
             gamePlayUI.updateChName(role);
+            gamePlayUI.updateMp(0);
 
             // 敵方初始化
             gamePlayUI.rivalHpMax = rivalHp;
+            gamePlayUI.rivalMpMax = rivalMaxMp;
             gamePlayUI.updateRivalName(rivalRole);
+            gamePlayUI.updateRivalMp(0);
 
             MainManager.socket.SendData("ready");
         }

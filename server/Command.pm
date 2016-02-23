@@ -54,12 +54,19 @@ use Data::dumper;
         my ($player, $cmd, $args) = @_;
         my ($res, $skill) = $player->useSkill($args->[0]);
         if( $res ){
-            $player
+            $player->sendSync("skill_queue");
         }
     }
 
     # 被使用技能開始執行
     be_skill => sub{
+        my ($player, $cmd, $args) = @_;
+        my ($res, $skill, $rival) = $player->getBeSkill();
+        if( $res ) {
+            $player->sendSync("skill_queue");
+            $player->write("be_skill ".encode_json([$skill]));
+            $rival->write("use_skill ".encode_json([$skill]));
+        }
     }
 
     # 防禦結果

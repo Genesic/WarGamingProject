@@ -19,8 +19,8 @@ public class Skill : MonoBehaviour
     }
 
     Dictionary<int, string> sName = new Dictionary<int, string>(){
-        {1, "九頭龍閃 !!"},
-        {2, "降龍十八掌 !!"},
+        {1, "九頭龍閃"},
+        {2, "降龍十八掌"},
     };
 
     public void showSkillText(int skillId)

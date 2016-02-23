@@ -20,6 +20,11 @@ public class GamePlayUI : MonoBehaviour
     public RectTransform hpBar;
     public RectTransform rivalHpMaxBar;
     public RectTransform rivalHpBar;
+    public RectTransform mpMaxBar;
+    public RectTransform mpBar;
+    public RectTransform rivalMpMaxBar;
+    public RectTransform rivalMpBar;
+    
     public Animator atkTempo;
     public PreTempo preTempo;
     public GameObject touchPanel;
@@ -29,7 +34,12 @@ public class GamePlayUI : MonoBehaviour
     public int hpMax;
     public int rivalHpMax;
     public int hp;
-    public int rivalHp;
+    public int rivalHp;    
+    public int mpMax;
+    public int rivalMpMax;
+    public int mp;
+    public int rivalMp;    
+
 
     Dictionary<ActSide, string> sideText = new Dictionary<ActSide, string>(){
         {ActSide.ATTACK, "ATTACK"},
@@ -80,4 +90,22 @@ public class GamePlayUI : MonoBehaviour
         float height = rivalHpMaxBar.rect.height;
         rivalHpBar.sizeDelta = new Vector2(width * percent, height);
     }
+    
+    public void updateMp(int newMp)
+    {
+        mp = newMp;
+        float percent = (float)mp / (float)mpMax;
+        float width = mpMaxBar.rect.width;
+        float height = mpMaxBar.rect.height;
+        mpBar.sizeDelta = new Vector2(width * percent, height);
+    }
+    public void updateRivalMp(int newMp)
+    {
+        rivalMp = newMp;
+        float percent = (float)rivalMp / (float)rivalMpMax;
+        float width = rivalMpMaxBar.rect.width;
+        float height = rivalMpMaxBar.rect.height;
+        rivalMpBar.sizeDelta = new Vector2(width * percent, height);
+    }
+        
 }
