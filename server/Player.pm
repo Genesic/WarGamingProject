@@ -106,8 +106,9 @@ sub load_cmd {
 
 sub write{
     my ($player, $line, $nolog) = @_;
+    my $hd = $player->{hd};
     $player->dolog("Send", $line) if( !$nolog );
-    $player->{hd}->push_write("$line\n");
+    $player->{hd}->push_write("$line\n") if( $hd );
 }
 
 sub dolog {
@@ -210,6 +211,7 @@ sub clearCombo {
 
 sub getSkillByCombo {
     my ($combo) = @_;
+    return HIT_18 if( $combo > 10 );
     return HIT_9 if( $combo > 5 );
     return NONE;
 }

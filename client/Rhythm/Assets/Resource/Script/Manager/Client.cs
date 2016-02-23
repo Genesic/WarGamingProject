@@ -30,6 +30,7 @@ public class Client
     
     public void connectToInputServer(string ipHost)
     {
+        Debug.Log(ipHost+":"+port);
         SetupServer(ipHost, port);
         SendData("login [1]");
     }

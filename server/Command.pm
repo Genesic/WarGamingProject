@@ -49,7 +49,8 @@ use Data::dumper;
         $player->sendCombo;
         # 如果combo中斷的話根據combo數施放skill
         if( $skill ){
-            $rival->write("be_skilled ".encode_json([$skill]));
+            $player->write("skill ".encode_json([$skill]));
+            $rival->write("be_skill ".encode_json([$skill]));
         }
     },
 

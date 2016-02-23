@@ -31,7 +31,6 @@ public class GamePlayUI : MonoBehaviour
     public int hp;
     public int rivalHp;
 
-
     Dictionary<ActSide, string> sideText = new Dictionary<ActSide, string>(){
         {ActSide.ATTACK, "ATTACK"},
         {ActSide.DEFEND, "DEFEND"}

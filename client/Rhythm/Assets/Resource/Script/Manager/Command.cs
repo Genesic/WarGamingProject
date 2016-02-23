@@ -64,7 +64,12 @@ public class Command : MonoBehaviour
         //            var args = JSON.Parse(jsons);
         //            socket_def(args);
         //        }
-        else if (cmd == "be_skilled")
+        else if (cmd == "skill")
+        {
+            var args = JSON.Parse(jsons);
+            socket_skill(args);
+        }
+        else if (cmd == "be_skill")
         {
             var args = JSON.Parse(jsons);
             socket_be_skilled(args);
@@ -126,6 +131,7 @@ public class Command : MonoBehaviour
             int rivalRole = int.Parse(data["rival_role"]);
             // 初始化
             gamePlayUI.updateCombo(0);
+            gamePlayUI.updateRivalCombo(0);
             startSelect.match.SetActive(false);
             gamePlayUI.gameObject.SetActive(true);
 
@@ -150,6 +156,12 @@ public class Command : MonoBehaviour
         tempoPlay.init();
         tempoPlay.startTempo();
         MainManager.socket.SendData("round_set");
+    }
+    
+    public void socket_skill(JSONNode data)
+    {
+        int id = data[0].AsInt;
+        skill.showSkillText(id);
     }
 
     public void socket_be_skilled(JSONNode data)

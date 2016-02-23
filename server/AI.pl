@@ -94,16 +94,23 @@ sub processCmd{
     } elsif( $cmd eq 'match' ){
         $client->write("ready") if( $args->{res} );
     } elsif( $cmd eq 'start_game' ){
-        for (1..10){
-            $client->write("tempo [1]");
-            sleep(1);
-        }
-        $client->write("tempo [0]");
-    } elsif( $cmd eq 'beSkilled' ){
-        for my $hp (1..14){
-            $client->write("def_res [-$hp]");
-            sleep (1);
-        }
+        $client->{tempo_timer_count} = 0;
+        $client->{tempo_timer} = AE::timer 1, 1, sub{
+            $client->{tempo_timer_count}++;
+            if( $client->{tempo_timer_count} > 13 ){
+                $client->write("tempo [0]");
+                delete $client->{tempo_timer};
+            } else {
+                $client->write("tempo [1]");
+            }
+        };
+    } elsif( $cmd eq 'be_skill' ){
+        $client->{skill_timer_count} = 0;
+        $client->{skill_timer} = AE::timer 1, 1, sub{
+            $client->{skill_timer_count}++;
+            $client->write("def_res [0]");
+            delete $client->{skill_timer} if( $client->{skill_timer_count} >=9 );
+        };
     }
 }
 
