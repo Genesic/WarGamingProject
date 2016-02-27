@@ -97,13 +97,26 @@ sub processCmd{
         $client->{tempo_timer_count} = 0;
         $client->{tempo_timer} = AE::timer 1, 1, sub{
             $client->{tempo_timer_count}++;
-            if( $client->{tempo_timer_count} > 13 ){
+            if( $client->{tempo_timer_count} > 10 ){                
                 $client->write("tempo [0]");
+                $client->write("skill [1,5]");
                 delete $client->{tempo_timer};
             } else {
                 $client->write("tempo [1]");
             }
         };
+    } elsif( $cmd eq 'sync' ){
+        if( defined $args->{rival_skill_queue} ){
+            $client->{rival_skill_queue} = $args->{rival_skill_queue}; 
+            $client->{skill_queue_timer} = AE::timer 1, 1, sub{
+                if( @{$client->{rival_skill_queue}} > 0 ){
+                    my $skill_id = shift @{$client->{rival_skill_queue}};
+                    $client->write("be_skill");
+                } else {
+                    delete $client->{skill_queue_timer};
+                }
+            };
+        }
     } elsif( $cmd eq 'be_skill' ){
         $client->{skill_timer_count} = 0;
         $client->{skill_timer} = AE::timer 1, 1, sub{

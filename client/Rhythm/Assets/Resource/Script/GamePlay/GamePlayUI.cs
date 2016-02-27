@@ -14,6 +14,8 @@ public class GamePlayUI : MonoBehaviour
 {
     public Text roundTimes;
     public Text side;
+    public Image headPic;
+    public Image rivalPic;
     public Text chName;
     public Text rivalName;
     public RectTransform hpMaxBar;
@@ -24,6 +26,8 @@ public class GamePlayUI : MonoBehaviour
     public RectTransform mpBar;
     public RectTransform rivalMpMaxBar;
     public RectTransform rivalMpBar;
+    public GameObject[] queueSkill;
+    public GameObject[] rivalQueueSkill;
     
     public Animator atkTempo;
     public PreTempo preTempo;
@@ -31,6 +35,7 @@ public class GamePlayUI : MonoBehaviour
     public AudioClip correctSE;
     public Text combo;
     public Text rivalCombo;
+    public int comboNum;
     public int hpMax;
     public int rivalHpMax;
     public int hp;
@@ -38,8 +43,14 @@ public class GamePlayUI : MonoBehaviour
     public int mpMax;
     public int rivalMpMax;
     public int mp;
-    public int rivalMp;    
-
+    public int rivalMp;
+    
+    private int selectRole;
+    private int rivalSelectRole;
+    
+    public int getSelectRole() {return selectRole;}
+    public int getRivalSelectRole() {return rivalSelectRole; }
+    public void clearSelectRole() { selectRole = 0; rivalSelectRole = 0; }
 
     Dictionary<ActSide, string> sideText = new Dictionary<ActSide, string>(){
         {ActSide.ATTACK, "ATTACK"},
@@ -48,6 +59,7 @@ public class GamePlayUI : MonoBehaviour
 
     public void updateCombo(int times)
     {
+        comboNum = times;
         combo.text = (times >= 1)? times + " combo" : string.Empty;
     }
     
@@ -61,16 +73,41 @@ public class GamePlayUI : MonoBehaviour
         side.text = sideText[act];
     }
 
-    public void updateChName(int id)
+    public void initCharacter(int id)
     {
-        string useName = Character.getName(id);
-        chName.text = useName;
+        var cobj = MainManager.dataCenter.characterGroup.getCharacter(id);
+        chName.text = cobj.cName;
+        headPic.sprite = cobj.headPic;        
+        hpMax = cobj.maxHp;
+        mpMax = cobj.maxMp;
+        int[] tmp = new int[0];
+        updateQueuSkill(tmp);
+        updateHp(hpMax);
+        
+        // 設定技能
+        for(int i=0 ; i< cobj.skillList.Length ; i++)
+        {
+            var skill = cobj.skillList[i];
+            MainManager.skill.setSkill(i, skill.id, skill.mp);            
+        }
+        updateMp(0);        
+               
+        selectRole = id;     
     }
-
-    public void updateRivalName(int id)
+    
+    public void initRivalCharacter(int id)
     {
-        string useName = Character.getName(id);
-        rivalName.text = useName;
+        var cobj = MainManager.dataCenter.characterGroup.getCharacter(id);
+        rivalName.text = cobj.cName;
+        rivalPic.sprite = cobj.headPic;
+        rivalHpMax = cobj.maxHp;
+        rivalMpMax = cobj.maxMp;
+        int[] tmp = new int[0];
+        updateRivalQueueSkll(tmp);        
+        updateRivalHp(rivalHpMax);
+        updateRivalMp(0);
+        
+        rivalSelectRole = id;                
     }
 
     public void updateHp(int newHp)
@@ -93,19 +130,70 @@ public class GamePlayUI : MonoBehaviour
     
     public void updateMp(int newMp)
     {
+        // mp增加時顯示動畫
+        if( newMp - mp > 0 )
+        {
+            var ma = MainManager.dataCenter.maMgr.Obtain("self");
+            ma.setOverTimer(0.2f);            
+            ma.setText("+"+(newMp -mp), new Color32(255,255,0,0) );
+            ma.setPosition(new Vector2(-50, 235));
+            ma.SetEnable();
+        }
         mp = newMp;
         float percent = (float)mp / (float)mpMax;
         float width = mpMaxBar.rect.width;
         float height = mpMaxBar.rect.height;
         mpBar.sizeDelta = new Vector2(width * percent, height);
+        
+        MainManager.skill.updateSkillStatus(mp);       
     }
     public void updateRivalMp(int newMp)
     {
+        // mp增加時顯示動畫
+        if( newMp - rivalMp > 0 )
+        {
+            var ma = MainManager.dataCenter.maMgr.Obtain("rival");
+            ma.setOverTimer(0.2f);            
+            ma.setText("+"+(newMp -rivalMp), new Color32(255,255,0,0) );
+            ma.setPosition(new Vector2(60, 235));
+            ma.SetEnable();
+        }        
         rivalMp = newMp;
         float percent = (float)rivalMp / (float)rivalMpMax;
         float width = rivalMpMaxBar.rect.width;
         float height = rivalMpMaxBar.rect.height;
         rivalMpBar.sizeDelta = new Vector2(width * percent, height);
     }
+    
+    public void updateQueuSkill(int[] skillIds)
+    {
+        int i=0;
+        for(i=0; i<skillIds.Length ; i++)
+        {
+            int id = skillIds[i];
+            var skill = MainManager.dataCenter.skillGroup.getSkill(id);
+            var sName = queueSkill[i].GetComponentInChildren<Text>();
+            sName.text = skill.sName;
+            queueSkill[i].SetActive(true);
+        }
         
+        for( ; i<queueSkill.Length ; i++)
+            queueSkill[i].SetActive(false);
+    }
+    
+    public void updateRivalQueueSkll(int[] skillIds)
+    {
+        int i=0;
+        for(i=0; i<skillIds.Length ; i++)
+        {
+            int id = skillIds[i];
+            var skill = MainManager.dataCenter.skillGroup.getSkill(id);
+            var sName = rivalQueueSkill[i].GetComponentInChildren<Text>();
+            sName.text = skill.sName;
+            rivalQueueSkill[i].SetActive(true);
+        }
+        
+        for( ; i<queueSkill.Length ; i++)
+            rivalQueueSkill[i].SetActive(false);                
+    }    
 }

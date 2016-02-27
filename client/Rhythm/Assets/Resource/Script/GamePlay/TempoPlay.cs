@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using SimpleJSON;
@@ -17,7 +18,7 @@ public enum ClickRes
 };
 public class TempoPlay : MonoBehaviour
 {
-    public BorderAtkClick borderAtkClick;
+    private BorderAtkClick borderAtkClick;
     // public BorderDefClick borderDefclick;
     public List<DefData> defQueue = new List<DefData>(); 
     private Animator flashBorder;
@@ -29,10 +30,14 @@ public class TempoPlay : MonoBehaviour
         flashBorder = GetComponent<Animator>();
         source = GetComponent<AudioSource>();
     }
-    
     public void playSE()
     {
-        source.Play();
+        source.Play();        
+    }
+    
+    public void processEnd()
+    {
+        borderAtkClick.processColor();    
     }
 
     public void startTempo()
@@ -51,18 +56,28 @@ public class TempoPlay : MonoBehaviour
     }
     IEnumerator playTempo()
     {
-        Debug.Log("start tempo");
+        int role = MainManager.getSelectRole();
+        var cobj = MainManager.dataCenter.characterGroup.getCharacter(role);
+        float startTempo = 0.5f;
+        int count = 0;
+        yield return new WaitForSeconds(cobj.getBeat(startTempo));
+        
         while (!MainManager.endGame)
         {
             // 初始化
+            count++;
             borderAtkClick.init();
-
+                
             // 播動畫
-            flashBorder.SetTrigger(MainManager.bpm60);                    
-            yield return new WaitForSeconds(MainManager.beat);
-            
+            flashBorder.SetTrigger(MainManager.bpm60);
+            yield return new WaitForSeconds(cobj.getBeat(1));
+
             if( borderAtkClick.clickRes == ClickRes.None)
-                MainManager.socket.SendData("tempo [0]");                                                                                       
+                MainManager.socket.SendData("tempo [0]");            
+                
+            // 不是被施放技能中的話可以被施放技能            
+            if( !MainManager.skill.isCastingSkill() && MainManager.skill.getRivalSkillQueueNum() > 0)
+                MainManager.socket.SendData("be_skill");                                                                                              
         }
     }
     /*

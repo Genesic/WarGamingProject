@@ -22,15 +22,15 @@ public class BorderDefClick :  MonoBehaviour, IPointerUpHandler, IPointerDownHan
     public void OnPointerDown(PointerEventData eventData)
     {
         clickRes = ClickRes.Perfect;
+        gameObject.GetComponent<Image>().color = Color.clear;
         MainManager.socket.SendData("def_res [1]");
-        // Debug.Log("perfect");
         StartCoroutine(showResText());
     }
     
     IEnumerator showResText()
     {
         resText.text = clickRes.ToString();
-        resText.color = MainManager.clickResToColor[clickRes];
+        resText.color = Color.yellow;
         yield return new WaitForSeconds(0.5f);
         resText.text = string.Empty;
     }

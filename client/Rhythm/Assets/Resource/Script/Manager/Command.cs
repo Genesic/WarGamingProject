@@ -60,14 +60,18 @@ public class Command : MonoBehaviour
             socket_start_game(args);
         }
         else if (cmd == "skill")
-        {
+        {   // 技能放進施放陣列
             var args = JSON.Parse(jsons);
             socket_skill(args);
         }
         else if (cmd == "be_skill")
-        {
+        {   // 被使用技能 
             var args = JSON.Parse(jsons);
             socket_be_skilled(args);
+        }
+        else if( cmd == "use_skill")
+        {   // 使用技能
+            
         }
         else if (cmd == "sync")
         {
@@ -114,13 +118,9 @@ public class Command : MonoBehaviour
     {
         int res = int.Parse(data["res"]);
         if (res == 1)
-        {
-            int hp = int.Parse(data["hp"]);
-            int rivalHp = int.Parse(data["rival_hp"]);
+        {            
             int role = int.Parse(data["role"]);
             int rivalRole = int.Parse(data["rival_role"]);
-            int maxMp = data["mp_max"].AsInt;
-            int rivalMaxMp = data["rival_mp_max"].AsInt;
             
             // 初始化
             gamePlayUI.updateCombo(0);
@@ -129,16 +129,10 @@ public class Command : MonoBehaviour
             gamePlayUI.gameObject.SetActive(true);
 
             // 我方初始化
-            gamePlayUI.hpMax = hp;
-            gamePlayUI.mpMax = maxMp;
-            gamePlayUI.updateChName(role);
-            gamePlayUI.updateMp(0);
+            gamePlayUI.initCharacter(role);
 
             // 敵方初始化
-            gamePlayUI.rivalHpMax = rivalHp;
-            gamePlayUI.rivalMpMax = rivalMaxMp;
-            gamePlayUI.updateRivalName(rivalRole);
-            gamePlayUI.updateRivalMp(0);
+            gamePlayUI.initRivalCharacter(rivalRole);
 
             MainManager.socket.SendData("ready");
         }
@@ -177,27 +171,42 @@ public class Command : MonoBehaviour
 
     public void socket_sync(JSONNode data)
     {
-        if (!string.IsNullOrEmpty(data["hp"]))
-        {
-            int hp = data["hp"].AsInt;
-            gamePlayUI.updateHp(hp);
-        }
-        if (!string.IsNullOrEmpty(data["rival_hp"]))
-        {
-            int rival_hp = data["rival_hp"].AsInt;
-            gamePlayUI.updateRivalHp(rival_hp);
-        }
+        if ( data["hp"] != null)
+            gamePlayUI.updateHp(data["hp"].AsInt);
         
-        if(!string.IsNullOrEmpty(data["combo"]))
-        {
-            int combo = data["combo"].AsInt;
-            gamePlayUI.updateCombo(combo);
-        }
+        if ( data["rival_hp"] != null )
+            gamePlayUI.updateRivalHp(data["rival_hp"].AsInt);
         
-        if(!string.IsNullOrEmpty(data["rival_combo"])){
-            int rivalCombo = data["rival_combo"].AsInt;
-            gamePlayUI.updateRivalCombo(rivalCombo);
-        }        
+        if ( data["mp"] != null)        
+            gamePlayUI.updateMp(data["mp"].AsInt);
+        
+        if ( data["rival_mp"] != null)
+            gamePlayUI.updateRivalMp(data["rival_mp"].AsInt);
+      
+        if( data["combo"] != null )
+            gamePlayUI.updateCombo(data["combo"].AsInt);
+                
+        if( data["rival_combo"] != null )
+            gamePlayUI.updateRivalCombo(data["rival_combo"].AsInt);
+            
+        if( data["skill_queue"] != null )
+        {
+            int[] skillIds = new int[data["skill_queue"].Count];
+            for(int i=0; i<skillIds.Length ; i++)
+                skillIds[i] = data["skill_queue"][i].AsInt;
+                            
+            gamePlayUI.updateQueuSkill(skillIds);
+        }
+
+        if( data["rival_skill_queue"] != null )
+        {
+            int[] skillIds = new int[data["rival_skill_queue"].Count];
+            for(int i=0; i<skillIds.Length ; i++)
+                skillIds[i] = data["rival_skill_queue"][i].AsInt;
+                                
+            skill.setRivalSkillQueueNum(skillIds.Length);
+            gamePlayUI.updateRivalQueueSkll(skillIds);
+        }            
     }
     
     public void socket_end_game()

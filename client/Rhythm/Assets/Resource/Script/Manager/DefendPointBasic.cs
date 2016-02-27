@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class DefendPointBasic : IPool
@@ -18,9 +19,10 @@ public class DefendPointBasic : IPool
     {
         base.SetEnable();
         gameObject.GetComponent<BorderDefClick>().init();
+        gameObject.GetComponent<Image>().color = Color.white;  
         StartCoroutine(closeDefendPoint());
     }
-
+    
     private IEnumerator closeDefendPoint()
     {
         yield return new WaitForSeconds(overTime);

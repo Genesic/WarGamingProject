@@ -5,6 +5,7 @@ use AE; use callee;
 use POSIX qw(strftime);
 use Data::Dumper;
 use JSON;
+use Config;
 
 my $player_seq = 0;
 our %command;
@@ -15,19 +16,12 @@ use constant {
     PLAYER1 => 1,
     PLAYER2 => 2,
 
+    TOUCH_SP => 2,
     TOUCH_SUCCESS => 1,
     TOUCH_FAIL => 0,
 
     WIN => 2,
     LOSE => 1,
-};
-
-# SKILL
-use constant {
-    NONE => 0,
-    SKILL_1 => 1,
-    SKILL_2 => 2,
-    SKILL_3 => 3,
 };
 
 sub addUser {
@@ -100,7 +94,7 @@ sub load_cmd {
     if( %tmp ){
         %command = %tmp;
     } else {
-        $player->dolog($player, "DEBUG", "load_cmd fail");
+        $player->dolog( "DEBUG", "load_cmd fail");
     }
 }
 
@@ -126,7 +120,7 @@ sub processCmd{
     } else {
         $player->dolog("In", $line);
         my $args = ($json)? decode_json($json) : [];
-        load_cmd();
+        $player->load_cmd();
         if( defined $command{$cmd} ){
             $command{$cmd}->($player, $cmd, $args);
         } else {
@@ -180,13 +174,8 @@ sub getStartData {
     my $rivalGame = $rival->{game};
     my %output = (
         res => 1,
-        pos => $playerGame->{pos},
         role => $player->{role},
         rival_role => $rival->{role},
-        hp => $playerGame->{hp},
-        rival_hp => $rivalGame->{hp},
-        mp_max => 100,
-        rival_mp_max => 100,
     );
 
     return \%output;
@@ -213,21 +202,10 @@ sub clearCombo {
     return $combo;
 }
 
-sub getSkillCost {
-    my %output = (
-        (SKILL_1) => 20,
-        (SKILL_2) => 30,
-        (SKILL_3) => 35,
-    )
-
-    return \%output;
-}
-
 sub useSkill {
-    my ($player, $skill) = @_;
-    my $patch = getSkillCost()->{$skill};
-    if( $player->{game}{mp} >= $patch ){
-        $player->patchMp(-$patch);
+    my ($player, $skill, $cost) = @_;
+    if( $player->{game}{mp} >= $cost ){
+        $player->patchMp(-$cost);
         $player->pushSkillQueue($skill);
         return (1, $skill);
     } else {
@@ -237,9 +215,14 @@ sub useSkill {
 
 sub checkTempo {
     my ($player, $touch) = @_;
-    if( $touch == TOUCH_SUCCESS ){
+    if( $touch == TOUCH_SP ){
         my $combo = $player->addCombo(1);
-        $player->updateMpByCombo($combo);
+        $player->updateMpByCombo($combo, 5);
+    } elsif( $touch == TOUCH_SUCCESS ){
+        my $combo = $player->addCombo(1);
+        $player->updateMpByCombo($combo, 1);
+    } elsif($touch == TOUCH_FAIL ) {
+        $player->clearCombo;
     }
 }
 
@@ -261,18 +244,18 @@ sub getBeSkill{
 }
 
 sub updateMpByCombo {
-    my ($player, $combo) = @_;
+    my ($player, $combo, $sp) = @_;
 
     if( $combo < 20 ){
-        $player->patchMp(1);
+        $player->patchMp(1*$sp);
     } elsif( $combo < 40 ){
-        $player->patchMp(2);
+        $player->patchMp(2*$sp);
     } elsif( $combo < 60 ){
-        $player->patchMp(3);
+        $player->patchMp(3*$sp);
     } elsif( $combo < 80 ){
-        $player->patchMp(4);
+        $player->patchMp(4*$sp);
     } else {
-        $player->patchMp(5);
+        $player->patchMp(5*$sp);
     }
 }
 

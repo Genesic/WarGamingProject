@@ -20,8 +20,8 @@ use Data::dumper;
             $rival->setStartData($player, Player::PLAYER2);
             my $data1 = $player->getStartData();
             my $data2 = $rival->getStartData();
-            $player->write("$cmd ".encode_json($data1)); # 設定player是位置1
-            $rival->write("$cmd ".encode_json($data2)); # 設定rival是位置2
+            $player->write("$cmd ".encode_json($data1));
+            $rival->write("$cmd ".encode_json($data2));
         } else {
             my $data = { res => 0, reason => "wait" };
             $player->write("$cmd ".encode_json($data));
@@ -47,27 +47,29 @@ use Data::dumper;
         my $tempo = $args->[0];
         $player->checkTempo($tempo);
         $player->sendSync("combo");
+        $player->sendSync("mp");
     },
 
     # 使用技能(會先放到對方client的be_skill_queue中，可以被執行時會再丟be_skill過來通知server傳送給兩邊執行)
     skill => sub {
         my ($player, $cmd, $args) = @_;
-        my ($res, $skill) = $player->useSkill($args->[0]);
+        my ($res, $skill) = $player->useSkill($args->[0], $args->[1]);
         if( $res ){
+            $player->sendSync("mp");
             $player->sendSync("skill_queue");
         }
-    }
+    },
 
     # 被使用技能開始執行
     be_skill => sub{
         my ($player, $cmd, $args) = @_;
         my ($res, $skill, $rival) = $player->getBeSkill();
         if( $res ) {
-            $player->sendSync("skill_queue");
+            $rival->sendSync("skill_queue");
             $player->write("be_skill ".encode_json([$skill]));
             $rival->write("use_skill ".encode_json([$skill]));
         }
-    }
+    },
 
     # 防禦結果
     def_res => sub {

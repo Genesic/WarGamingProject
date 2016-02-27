@@ -8,7 +8,7 @@ public class DefendPointManager : ObjectPools<DefendPointManager, DefendPointBas
     protected override void Awake() { base.Awake(); }
 
     protected override void OnDestroy() { base.OnDestroy(); }
-    public GameObject defPointPrefab;
+    //public GameObject defPointPrefab;
     
     public static void Retrieve(DefendPointBasic obj)
     {
@@ -19,12 +19,13 @@ public class DefendPointManager : ObjectPools<DefendPointManager, DefendPointBas
     {
         // var path = string.Format("Prefab/DefendPoint");
         // var prefab = Resources.Load<GameObject>(path);
-        var defPointGo = Instantiate(defPointPrefab);
+        var dp = MainManager.dataCenter.dpGroup.getDefendPointByString(id);        
+        var defPointGo = Instantiate(dp.prefab);
         var defPointTs = defPointGo.transform;
         defPointTs.SetParent(ContainerTs);
         
         DefendPointBasic setting = defPointGo.GetComponent<DefendPointBasic>();
-        setting.setParam(id);
+        setting.setParam(id);        
         return setting;
     }
 }

@@ -12,12 +12,15 @@ use Getopt::Std;
 use Data::Dumper;
 use POSIX qw(strftime);
 
+use Carp;
+
 use Player;
 
 my $cv = AE::cv;
 sub main {
     my(%opt, @port) = ();
     getopts("Ep:",\%opt);
+    $SIG{ __DIE__ } = sub { Carp::confess( @_ ) };
     if( $opt{E} ){
         my $file = 'Command.pm';
         do $file;
