@@ -9,6 +9,7 @@ public class MainManager : MonoBehaviour
     public static Command command;
     public static DataCenter dataCenter;
     public static Skill skill;
+    public static AudioSource bgm;
     public static MainManager ins;
 
     // Use this for initialization
@@ -22,6 +23,7 @@ public class MainManager : MonoBehaviour
             skill = gameObject.GetComponent<Skill>();
             command = gameObject.GetComponent<Command>();
             command.init();
+            bgm = GetComponent<AudioSource>();
 
             socket = new Client(command);
         }
@@ -34,6 +36,7 @@ public class MainManager : MonoBehaviour
     }
 
     public static int bpm60 = Animator.StringToHash("bpm60");
+    public static int bpm120 = Animator.StringToHash("bpm120");
     public static bool endGame = false;
     public static void updateEndGame(bool flag)
     {

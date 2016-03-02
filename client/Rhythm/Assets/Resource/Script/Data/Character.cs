@@ -13,6 +13,6 @@ public class Character : MonoBehaviour {
     public Sprite headPic;
     public float getBeat(float tempo)
     {
-        return (60/bpm) * tempo;
+        return (60F/bpm) * tempo;
     }
 }

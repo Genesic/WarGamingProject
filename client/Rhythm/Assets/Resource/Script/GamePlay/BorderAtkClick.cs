@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System;
 using System.Collections;
 using UnityEngine.EventSystems;
 using SimpleJSON;
@@ -10,6 +11,9 @@ public class BorderAtkClick : MonoBehaviour, IPointerUpHandler, IPointerDownHand
     public ClickRes clickRes = ClickRes.None;
     public Text resText;
     public bool start;
+    public bool successFlag;
+    public bool trace; // 用來測試節奏的
+    
     public bool spButton;
     private int count = 0;
     private Color nColor = new Color32(0, 0, 255, 0);
@@ -20,6 +24,7 @@ public class BorderAtkClick : MonoBehaviour, IPointerUpHandler, IPointerDownHand
         resText.text = string.Empty;
         resText.color = Color.clear;
         start = true;
+        successFlag = false;
         count++;
     }
     
@@ -32,14 +37,21 @@ public class BorderAtkClick : MonoBehaviour, IPointerUpHandler, IPointerDownHand
         }        
     }
     
+    DateTime last;
+    DateTime now;
     public void OnPointerDown(PointerEventData eventData)
     {
         //DebugPoint(eventData);
         if (start)
         {
             start = false;
-            
-            if (border.color.a > 0.4)
+            MainManager.socket.SendData("tempo [1]");
+            successFlag = true;
+        } else {
+            MainManager.socket.SendData("tempo [0]");
+        }
+/*            
+            if (border.color.a > 1)
                 clickRes = ClickRes.Perfect;
             else
                 clickRes = ClickRes.Miss;
@@ -48,12 +60,22 @@ public class BorderAtkClick : MonoBehaviour, IPointerUpHandler, IPointerDownHand
             JSONNode json = new JSONArray();
             int success = ( count % 4 == 0 && count > 1)? 2 : 1; // 按下去的時候count已經先加過1
             Debug.Log("count:"+count+" success:"+success);
-            json[0] = (border.color.a > 0.4)? success.ToString() : "0";            
+            Debug.Log("=================check:"+border.color.a+"================");
+            json[0] = (border.color.a > 1)? success.ToString() : "0";            
             
             // json[0] = ((int)clickRes).ToString();
             MainManager.socket.SendData("tempo " + json.ToString());
-            
+       
             // StartCoroutine(showResText());
+        }
+ */       
+ //=============以下測試================
+        if( trace ) {
+            now = DateTime.Now;
+            TimeSpan span = now - last;
+            int ms = (int)span.TotalMilliseconds;
+            Debug.Log(ms);
+            last = now;
         }
     }
     IEnumerator showResText()
