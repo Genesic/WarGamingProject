@@ -1,6 +1,7 @@
 use strict;
 
 use Data::dumper;
+use NonPlayer;
 
 (
     # 選擇角色
@@ -10,21 +11,37 @@ use Data::dumper;
         $player->write("$cmd ".encode_json([1]));
     },
 
+    # 選擇單人還是多人
+    choose_mode => sub {
+        my ($player, $cmd, $args) = @_;
+        $player->{mode} = $args->[0];
+        $player->write("$cmd ".encode_json([1]));
+    },
+
     # 配對
     match => sub {
         my ($player, $cmd, $args) = @_;
         $player->{startMatch} = 1;
-        my ($res, $rival) = $player->match();
-        if( $res ){
-            $player->setStartData($rival, Player::PLAYER1);
-            $rival->setStartData($player, Player::PLAYER2);
-            my $data1 = $player->getStartData();
-            my $data2 = $rival->getStartData();
-            $player->write("$cmd ".encode_json($data1));
-            $rival->write("$cmd ".encode_json($data2));
-        } else {
-            my $data = { res => 0, reason => "wait" };
+        if( $player->{mode} == Player::SINGLE_MODE ){
+            # 單人模式
+            my $nonPlayer = new NonPlayer($player->{rid}); 
+            $player->setStartData($nonPlayer, Player::PLAYER1);
+            my $data = $player->getStartData();
             $player->write("$cmd ".encode_json($data));
+        } elsif( $player->{mode} == Player::MULTIPLAY_MODE ){
+            # 多人模式
+            my ($res, $rival) = $player->match();
+            if( $res ){
+                $player->setStartData($rival, Player::PLAYER1);
+                $rival->setStartData($player, Player::PLAYER2);
+                my $data1 = $player->getStartData();
+                my $data2 = $rival->getStartData();
+                $player->write("$cmd ".encode_json($data1));
+                $rival->write("$cmd ".encode_json($data2));
+            } else {
+                my $data = { res => 0, reason => "wait" };
+                $player->write("$cmd ".encode_json($data));
+            }
         }
     },
 
@@ -50,7 +67,7 @@ use Data::dumper;
         $player->sendSync("mp");
     },
 
-    # 使用技能(會先放到對方client的be_skill_queue中，可以被執行時會再丟be_skill過來通知server傳送給兩邊執行)
+    # 使用技能(會先放到自己的skill_queue中，可以被執行時會再丟be_skill過來通知server傳送給兩邊執行)
     skill => sub {
         my ($player, $cmd, $args) = @_;
         my ($res, $skill) = $player->useSkill($args->[0], $args->[1]);

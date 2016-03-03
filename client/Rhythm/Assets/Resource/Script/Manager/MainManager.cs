@@ -9,6 +9,7 @@ public class MainManager : MonoBehaviour
     public static Command command;
     public static DataCenter dataCenter;
     public static Skill skill;
+    public static GamePlayObject gamePlayObj;
     public static AudioSource bgm;
     public static MainManager ins;
 
@@ -23,6 +24,7 @@ public class MainManager : MonoBehaviour
             skill = gameObject.GetComponent<Skill>();
             command = gameObject.GetComponent<Command>();
             command.init();
+            gamePlayObj = command.gamePlayObj;
             bgm = GetComponent<AudioSource>();
 
             socket = new Client(command);
@@ -55,5 +57,9 @@ public class MainManager : MonoBehaviour
     public void connectToInputServer()
     {
         socket.connectToInputServer(ipHost.text);
-    }
+    }    
+    public void selectMode(int mode)
+    {
+        MainManager.socket.SendData("choose_mode ["+mode+"]");
+    }    
 }

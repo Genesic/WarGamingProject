@@ -28,6 +28,8 @@ public class GamePlayUI : MonoBehaviour
     public RectTransform rivalMpBar;
     public GameObject[] queueSkill;
     public GameObject[] rivalQueueSkill;
+    public GameObject skillText;
+    public GameObject rivalSkillText;
     
     public Animator atkTempo;
     public PreTempo preTempo;
@@ -195,5 +197,6 @@ public class GamePlayUI : MonoBehaviour
         
         for( ; i<queueSkill.Length ; i++)
             rivalQueueSkill[i].SetActive(false);                
-    }    
+    }
+    
 }

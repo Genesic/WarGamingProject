@@ -15,6 +15,10 @@ use constant {
     NOLOG => 1,
     PLAYER1 => 1,
     PLAYER2 => 2,
+    AI_PLAYER => -1,
+
+    SINGLE_MODE => 1,
+    MULTIPLAY_MODE => 2,
 
     TOUCH_SP => 2,
     TOUCH_SUCCESS => 1,
@@ -37,8 +41,12 @@ sub getUser {
 sub getRival {
     my ($player) = @_;
     return undef if( !$player->{rival} );
-    my $rival = getUser($player->{rival});
-    return $rival;
+    if( $player->{rival} > 0 ){
+        my $rival = getUser($player->{rival});
+        return $rival;
+    } else {
+        return $player->{nonPlayer};
+    }
 }
 
 sub new {
@@ -163,6 +171,10 @@ sub setStartData {
         skill_queue => [],
     );
     $player->{game} = \%data;
+
+    if( $player->{rival} < 0 ){
+        $player->{nonPlayer} = $rival;
+    }
 }
 
 sub getStartData {
@@ -284,6 +296,10 @@ sub patchMp {
 sub gameOver {
     my ($player) = @_;
     delete $player->{rival};
+}
+
+sub isPlayer {
+    return 1;
 }
 
 1;

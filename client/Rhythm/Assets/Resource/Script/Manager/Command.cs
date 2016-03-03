@@ -11,6 +11,7 @@ public class Command : MonoBehaviour
     public GamePlayUI gamePlayUI;
     public TempoPlay tempoPlay;
     public Skill skill;
+    public GamePlayObject gamePlayObj;
 
     public List<string> socketQueue;
 
@@ -43,6 +44,10 @@ public class Command : MonoBehaviour
         {
             socket_login();
         }
+        else if (cmd == "choose_mode")
+        {
+            socket_choose_mode();
+        }
         else if (cmd == "select_role")
         {
             var args = JSON.Parse(jsons);
@@ -71,7 +76,8 @@ public class Command : MonoBehaviour
         }
         else if( cmd == "use_skill")
         {   // 使用技能
-            
+            var args = JSON.Parse(jsons);
+            socket_use_skill(args);
         }
         else if (cmd == "sync")
         {
@@ -92,8 +98,16 @@ public class Command : MonoBehaviour
         //Dictionary<string, float> tmp = gameFlow.getGameSet();
         //string gameSet = Json.Serialize(tmp);
         // MainManager.socket.SendData("game_set " + gameSet);
-        // 開啟選擇角色面板
-        startSelect.selectRolePanel.SetActive(true);
+        
+        // 開啟選擇模式面板
+        startSelect.selectModePanel.SetActive(true);
+    }
+    
+    public void socket_choose_mode()
+    {
+        // 關閉選擇模式面板 開啟選擇角色面板
+        startSelect.selectModePanel.SetActive(false);
+        startSelect.selectRolePanel.SetActive(true);        
     }
 
     IEnumerator reLogin()
@@ -146,7 +160,7 @@ public class Command : MonoBehaviour
     {
         tempoPlay.init();
         tempoPlay.startTempo();
-        MainManager.socket.SendData("round_set");
+        gamePlayObj.startGame();
     }
     
     public void socket_skill(JSONNode data)
@@ -207,6 +221,11 @@ public class Command : MonoBehaviour
             skill.setRivalSkillQueueNum(skillIds.Length);
             gamePlayUI.updateRivalQueueSkll(skillIds);
         }            
+    }
+    
+    public void socket_use_skill(JSONNode data)
+    {
+        MainManager.skill.showSkillText(data[0].AsInt);
     }
     
     public void socket_end_game()
