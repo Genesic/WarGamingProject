@@ -71,19 +71,29 @@ public class TempoPlay : MonoBehaviour
         var cobj = MainManager.dataCenter.characterGroup.getCharacter(role);
         //float startTempo = 0.5f;
         //yield return new WaitForSeconds(cobj.getBeat(0.5f));
-
+        var skillMgr = MainManager.skill;
         while (!MainManager.endGame)
         {
             // 播動畫
             flashBorder.SetTrigger(MainManager.bpm60);
             yield return new WaitForSeconds(cobj.getBeat(2));
 
-            // 不是被施放技能中的話可以被施放技能            
-            if (!MainManager.skill.isCastingSkill() && MainManager.skill.getRivalSkillQueueNum() > 0)
-                MainManager.socket.SendData("be_skill");
+            // 可以被施放技能條件 1.不再施放技能中 2.不在被施放技能中 3.skill_queue下一個技能是敵方技能
+            if (skillMgr.isCastingSkill())
+                continue;
+
+            if (skillMgr.isBeCastingSkill())
+                continue;
+
+            if (!skillMgr.getRivalSkill())
+                continue;
+
+            MainManager.socket.SendData("be_skill");
+            MainManager.skill.setRivalSkill(false);
+
         }
     }
-//=============以下測試=================
+    //=============以下測試=================
     public void testTempo()
     {
         init();
@@ -99,14 +109,14 @@ public class TempoPlay : MonoBehaviour
         DateTime ed;
         while (!MainManager.endGame)
         {
-            st = DateTime.Now;            
+            st = DateTime.Now;
             // 播動畫
             GetComponent<Animator>().SetTrigger(MainManager.bpm60);
             yield return new WaitForSeconds(cobj.getBeat(2));
             ed = DateTime.Now;
             TimeSpan diff = ed - st;
             int ms = (int)diff.TotalMilliseconds;
-            Debug.Log("act:"+ms);
+            Debug.Log("act:" + ms);
         }
     }
     /*

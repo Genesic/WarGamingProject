@@ -12,7 +12,6 @@ public enum ActSide
 
 public class GamePlayUI : MonoBehaviour
 {
-    public Text roundTimes;
     public Text side;
     public Image headPic;
     public Image rivalPic;
@@ -26,15 +25,8 @@ public class GamePlayUI : MonoBehaviour
     public RectTransform mpBar;
     public RectTransform rivalMpMaxBar;
     public RectTransform rivalMpBar;
-    public GameObject[] queueSkill;
-    public GameObject[] rivalQueueSkill;
-    public GameObject skillText;
-    public GameObject rivalSkillText;
+    public SkillQueue skillQueue;
     
-    public Animator atkTempo;
-    public PreTempo preTempo;
-    public GameObject touchPanel;
-    public AudioClip correctSE;
     public Text combo;
     public Text rivalCombo;
     public int comboNum;
@@ -82,8 +74,6 @@ public class GamePlayUI : MonoBehaviour
         headPic.sprite = cobj.headPic;        
         hpMax = cobj.maxHp;
         mpMax = cobj.maxMp;
-        int[] tmp = new int[0];
-        updateQueuSkill(tmp);
         updateHp(hpMax);
         
         // 設定技能
@@ -104,8 +94,6 @@ public class GamePlayUI : MonoBehaviour
         rivalPic.sprite = cobj.headPic;
         rivalHpMax = cobj.maxHp;
         rivalMpMax = cobj.maxMp;
-        int[] tmp = new int[0];
-        updateRivalQueueSkll(tmp);        
         updateRivalHp(rivalHpMax);
         updateRivalMp(0);
         
@@ -167,36 +155,8 @@ public class GamePlayUI : MonoBehaviour
         rivalMpBar.sizeDelta = new Vector2(width * percent, height);
     }
     
-    public void updateQueuSkill(int[] skillIds)
+    public void updateQueuSkill(SkillQueueData[] info)
     {
-        int i=0;
-        for(i=0; i<skillIds.Length ; i++)
-        {
-            int id = skillIds[i];
-            var skill = MainManager.dataCenter.skillGroup.getSkill(id);
-            var sName = queueSkill[i].GetComponentInChildren<Text>();
-            sName.text = skill.sName;
-            queueSkill[i].SetActive(true);
-        }
-        
-        for( ; i<queueSkill.Length ; i++)
-            queueSkill[i].SetActive(false);
+        skillQueue.updateQueue(info);
     }
-    
-    public void updateRivalQueueSkll(int[] skillIds)
-    {
-        int i=0;
-        for(i=0; i<skillIds.Length ; i++)
-        {
-            int id = skillIds[i];
-            var skill = MainManager.dataCenter.skillGroup.getSkill(id);
-            var sName = rivalQueueSkill[i].GetComponentInChildren<Text>();
-            sName.text = skill.sName;
-            rivalQueueSkill[i].SetActive(true);
-        }
-        
-        for( ; i<queueSkill.Length ; i++)
-            rivalQueueSkill[i].SetActive(false);                
-    }
-    
 }

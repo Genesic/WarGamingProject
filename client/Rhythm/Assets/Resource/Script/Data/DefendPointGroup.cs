@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 public enum TouchType {
-    Click = 1,    
+    ForAtkShow = 0,
+    ForDefShow = 1,
+    Click = 2,    
 }
 public class DefendPointGroup : MonoBehaviour
 {

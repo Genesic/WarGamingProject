@@ -36,6 +36,7 @@ public class Command : MonoBehaviour
         string[] strs = line.Split(' ');
         string cmd = strs[0];
         string jsons = (strs.Length > 1) ? strs[1] : "[]";
+        var args = JSON.Parse(jsons);
         if (cmd == "ping")
         {
             socket_ping();
@@ -50,40 +51,45 @@ public class Command : MonoBehaviour
         }
         else if (cmd == "select_role")
         {
-            var args = JSON.Parse(jsons);
             int res = int.Parse(args[0]);
             socket_select_role(res);
         }
         else if (cmd == "match")
         {
-            var args = JSON.Parse(jsons);
             socket_match(args);
         }
         else if (cmd == "start_game")
         {
-            var args = JSON.Parse(jsons);
             socket_start_game(args);
         }
         else if (cmd == "skill")
         {   // 技能放進施放陣列
-            var args = JSON.Parse(jsons);
             socket_skill(args);
         }
         else if (cmd == "be_skill")
         {   // 被使用技能 
-            var args = JSON.Parse(jsons);
             socket_be_skilled(args);
         }
-        else if( cmd == "use_skill")
+        else if (cmd == "use_skill")
         {   // 使用技能
-            var args = JSON.Parse(jsons);
             socket_use_skill(args);
+        }
+        else if (cmd == "atk_show")
+        {	// 使用技能攻擊對手時顯示攻擊的點 
+            socket_atk_show(args);
+        }
+        else if (cmd == "def_show")
+        {
+            socket_def_show(args);            
+        }
+        else if (cmd == "skill_queue")
+        {
+            socket_skill_queue(args);
         }
         else if (cmd == "sync")
         {
-            var args = JSON.Parse(jsons);
             socket_sync(args);
-        }    
+        }
         else if (cmd == "end_game")
         {
             socket_end_game();
@@ -98,16 +104,16 @@ public class Command : MonoBehaviour
         //Dictionary<string, float> tmp = gameFlow.getGameSet();
         //string gameSet = Json.Serialize(tmp);
         // MainManager.socket.SendData("game_set " + gameSet);
-        
+
         // 開啟選擇模式面板
         startSelect.selectModePanel.SetActive(true);
     }
-    
+
     public void socket_choose_mode()
     {
         // 關閉選擇模式面板 開啟選擇角色面板
         startSelect.selectModePanel.SetActive(false);
-        startSelect.selectRolePanel.SetActive(true);        
+        startSelect.selectRolePanel.SetActive(true);
     }
 
     IEnumerator reLogin()
@@ -132,15 +138,17 @@ public class Command : MonoBehaviour
     {
         int res = int.Parse(data["res"]);
         if (res == 1)
-        {            
+        {
             int role = int.Parse(data["role"]);
             int rivalRole = int.Parse(data["rival_role"]);
-            
+
             // 初始化
             gamePlayUI.updateCombo(0);
             gamePlayUI.updateRivalCombo(0);
             startSelect.match.SetActive(false);
             gamePlayUI.gameObject.SetActive(true);
+            SkillQueueData[] tmp = new SkillQueueData[0];
+            gamePlayUI.skillQueue.updateQueue(tmp); 
 
             // 我方初始化
             gamePlayUI.initCharacter(role);
@@ -162,7 +170,7 @@ public class Command : MonoBehaviour
         tempoPlay.startTempo();
         gamePlayObj.startGame();
     }
-    
+
     public void socket_skill(JSONNode data)
     {
         int id = data[0].AsInt;
@@ -172,7 +180,7 @@ public class Command : MonoBehaviour
     public void socket_be_skilled(JSONNode data)
     {
         int id = int.Parse(data[0]);
-        skill.startSkill(id);
+        skill.startBeSkill(id);
     }
 
     public void socket_def(JSONNode data)
@@ -185,49 +193,77 @@ public class Command : MonoBehaviour
 
     public void socket_sync(JSONNode data)
     {
-        if ( data["hp"] != null)
+        if (data["hp"] != null)
             gamePlayUI.updateHp(data["hp"].AsInt);
-        
-        if ( data["rival_hp"] != null )
-            gamePlayUI.updateRivalHp(data["rival_hp"].AsInt);
-        
-        if ( data["mp"] != null)        
-            gamePlayUI.updateMp(data["mp"].AsInt);
-        
-        if ( data["rival_mp"] != null)
-            gamePlayUI.updateRivalMp(data["rival_mp"].AsInt);
-      
-        if( data["combo"] != null )
-            gamePlayUI.updateCombo(data["combo"].AsInt);
-                
-        if( data["rival_combo"] != null )
-            gamePlayUI.updateRivalCombo(data["rival_combo"].AsInt);
-            
-        if( data["skill_queue"] != null )
-        {
-            int[] skillIds = new int[data["skill_queue"].Count];
-            for(int i=0; i<skillIds.Length ; i++)
-                skillIds[i] = data["skill_queue"][i].AsInt;
-                            
-            gamePlayUI.updateQueuSkill(skillIds);
-        }
 
-        if( data["rival_skill_queue"] != null )
-        {
-            int[] skillIds = new int[data["rival_skill_queue"].Count];
-            for(int i=0; i<skillIds.Length ; i++)
-                skillIds[i] = data["rival_skill_queue"][i].AsInt;
-                                
-            skill.setRivalSkillQueueNum(skillIds.Length);
-            gamePlayUI.updateRivalQueueSkll(skillIds);
-        }            
+        if (data["rival_hp"] != null)
+            gamePlayUI.updateRivalHp(data["rival_hp"].AsInt);
+
+        if (data["mp"] != null)
+            gamePlayUI.updateMp(data["mp"].AsInt);
+
+        if (data["rival_mp"] != null)
+            gamePlayUI.updateRivalMp(data["rival_mp"].AsInt);
+
+        if (data["combo"] != null)
+            gamePlayUI.updateCombo(data["combo"].AsInt);
+
+        if (data["rival_combo"] != null)
+            gamePlayUI.updateRivalCombo(data["rival_combo"].AsInt);
+        /*            
+                if( data["skill_queue"] != null )
+                {
+                    int[] skillIds = new int[data["skill_queue"].Count];
+                    for(int i=0; i<skillIds.Length ; i++)
+                        skillIds[i] = data["skill_queue"][i].AsInt;
+
+                    gamePlayUI.updateQueuSkill(skillIds);
+                }
+
+                if( data["rival_skill_queue"] != null )
+                {
+                    int[] skillIds = new int[data["rival_skill_queue"].Count];
+                    for(int i=0; i<skillIds.Length ; i++)
+                        skillIds[i] = data["rival_skill_queue"][i].AsInt;
+
+                    skill.setRivalSkillQueueNum(skillIds.Length);
+                    gamePlayUI.updateRivalQueueSkll(skillIds);
+                }        
+        */
     }
-    
+
     public void socket_use_skill(JSONNode data)
     {
         MainManager.skill.showSkillText(data[0].AsInt);
+        skill.startCastSkill(data[0].AsInt);
+    }
+
+    public void socket_skill_queue(JSONNode data)
+    {
+        int count = (gamePlayUI.skillQueue.queue.Length > data.AsArray.Count) ? data.AsArray.Count : gamePlayUI.skillQueue.queue.Length;
+        var info = new SkillQueueData[count];
+        for (int i = 0; i < count; i++)
+        {
+            info[i].target = data[i][0].AsInt;
+            info[i].skillId = data[i][1].AsInt;
+        }
+
+        gamePlayUI.skillQueue.updateQueue(info);
+        
+        // 如果queue裡面第一個是對手技能的話更新施放旗標
+        if( count > 0 && info[0].target == SkillQueue.RIVAL_SKILL )
+            MainManager.skill.setRivalSkill(true);
     }
     
+    public void socket_atk_show(JSONNode data)
+    {
+        skill.atkShow(data[0].AsInt, data[1].AsInt);
+    }
+    
+    public void socket_def_show(JSONNode data)
+    {                
+    }
+
     public void socket_end_game()
     {
         MainManager.updateEndGame(true);

@@ -23,7 +23,8 @@ public class BorderDefClick :  MonoBehaviour, IPointerUpHandler, IPointerDownHan
     {
         clickRes = ClickRes.Perfect;
         gameObject.GetComponent<Image>().color = Color.clear;
-        MainManager.socket.SendData("def_res [1]");
+        int id = GetComponent<DefendPointBasic>().getId();
+        MainManager.socket.SendData("def_res ["+id+",1]");
         StartCoroutine(showResText());
     }
     

@@ -7,7 +7,6 @@ public class GamePlayObject : MonoBehaviour {
     
     public void startGame()
     {
-        Debug.Log("in!!");
         player.SetActive(true);
         rival.SetActive(true);
     }

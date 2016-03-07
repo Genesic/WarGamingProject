@@ -2,6 +2,7 @@ use strict;
 
 use Data::dumper;
 use NonPlayer;
+use Room;
 
 (
     # 選擇角色
@@ -24,20 +25,14 @@ use NonPlayer;
         $player->{startMatch} = 1;
         if( $player->{mode} == Player::SINGLE_MODE ){
             # 單人模式
-            my $nonPlayer = new NonPlayer($player->{rid}); 
-            $player->setStartData($nonPlayer, Player::PLAYER1);
-            my $data = $player->getStartData();
-            $player->write("$cmd ".encode_json($data));
+            my $room = Room->new($player->{rid}, Room::AI_PLAYER);
+            $room->sendStartData($cmd);
         } elsif( $player->{mode} == Player::MULTIPLAY_MODE ){
             # 多人模式
             my ($res, $rival) = $player->match();
-            if( $res ){
-                $player->setStartData($rival, Player::PLAYER1);
-                $rival->setStartData($player, Player::PLAYER2);
-                my $data1 = $player->getStartData();
-                my $data2 = $rival->getStartData();
-                $player->write("$cmd ".encode_json($data1));
-                $rival->write("$cmd ".encode_json($data2));
+            if( $res ){                
+                my $room = Room->new($player->{rid}, $rival->{rid});
+                $room->sendStartData($cmd);
             } else {
                 my $data = { res => 0, reason => "wait" };
                 $player->write("$cmd ".encode_json($data));
@@ -48,60 +43,56 @@ use NonPlayer;
     # client準備完成可以開始遊戲
     ready => sub {
         my ($player, $cmd, $args) = @_;
-        my ($res, $rival) = $player->checkReady();
-        if( $res ){
-            $player->write("start_game ".encode_json([1]));
-            $rival->write("start_game ".encode_json([1]));
-        }
+        $player->{room}->checkReady($player);
     },
 
     # 每一拍傳送過來的結果
     tempo => sub {
         my ($player, $cmd, $args) = @_;
-        my $rival = $player->getRival;
-        return if( !$rival );
+        my $room = $player->{room};
+        return if( !$room );
 
         my $tempo = $args->[0];
-        $player->checkTempo($tempo);
-        $player->sendSync("combo");
-        $player->sendSync("mp");
+        $room->checkTempo($player, $tempo);
     },
 
     # 使用技能(會先放到自己的skill_queue中，可以被執行時會再丟be_skill過來通知server傳送給兩邊執行)
     skill => sub {
         my ($player, $cmd, $args) = @_;
-        my ($res, $skill) = $player->useSkill($args->[0], $args->[1]);
+        my $room = $player->{room};
+        return if( !$room );
+        my ($res, $skill) = $room->useSkill($player, $args->[0], $args->[1]);
         if( $res ){
-            $player->sendSync("mp");
-            $player->sendSync("skill_queue");
+            $room->sendSync($player, "mp");
+            $room->sendSkillQueue;
         }
     },
 
     # 被使用技能開始執行
     be_skill => sub{
         my ($player, $cmd, $args) = @_;
-        my ($res, $skill, $rival) = $player->getBeSkill();
+        my $room = $player->{room};
+        my ($res, $rid, $skill) = $room->getBeSkill($player);
         if( $res ) {
-            $rival->sendSync("skill_queue");
-            $player->write("be_skill ".encode_json([$skill]));
-            $rival->write("use_skill ".encode_json([$skill]));
+            $room->sendSkillQueue;
+            my $caster = $room->getPlayer($rid); 
+            my $victim = $room->getRival($caster);
+            $caster->write("use_skill ".encode_json([$skill])) if( $caster );
+            $victim->write("be_skill ".encode_json([$skill])) if( $victim );
         }
     },
 
     # 防禦結果
     def_res => sub {
         my ($player, $cmd, $args) = @_;
-        my $rival = $player->getRival;
-        return if( !$rival );
+        my $room = $player->{room};
+        return if( !$room );
 
-        my $patch = ($args->[0])? 0 : -5;
-        my $hp = $player->patchHp($patch);
-        $player->sendSync("hp");
-        if( $hp < 0 ){
-            $player->write("end_game ".encode_json([Player::LOSE]));
-            $rival->write("end_game ".encode_json([Player::WIN]));
-            $player->gameOver;
-            $rival->gameOver;
-        }
+        my ($id, $res) = @$args;
+        my $patch = ($res)? 0 : -5;
+        my $hp = $room->patchHp($player, $patch);
+        $room->sendSync($player, "hp");
+        $room->sendDefShow($player, $id, $res);
+        $room->destroy if( $room->isGameOver ); # end_game在checkGameOver裡面送
     },
 )

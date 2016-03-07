@@ -41,6 +41,6 @@ public class SecondSkill : SkillBase {
         }
         
         // 取消技能施放狀態
-        MainManager.skill.stopCastingSKill();
+        MainManager.skill.stopBeCastingSKill();
     }
 }

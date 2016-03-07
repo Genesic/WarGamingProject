@@ -6,8 +6,11 @@ public class DefendPointBasic : IPool
 {
     private RectTransform mTs = null;
     private float overTime;
+    private int defId;
 
     public void setParam(string id) { mID = id; }
+    public void setId(int id) { defId = id; }
+    public int getId() { return defId; }
     public void setPosition(Vector2 position)
     {
         mTs = (mTs == null) ? gameObject.GetComponent<RectTransform>() : mTs;
@@ -30,6 +33,6 @@ public class DefendPointBasic : IPool
 
         var pointDown = gameObject.GetComponent<BorderDefClick>();
         if (pointDown.clickRes == ClickRes.Miss)
-            MainManager.socket.SendData("def_res [0]");
+            MainManager.socket.SendData("def_res ["+defId+",0]");
     }
 }
